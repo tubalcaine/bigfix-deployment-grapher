@@ -155,8 +155,7 @@ for r in relay.keys():
         ## Detail means a node for every endpoint
         if conf.detail:
             for ep in grp['compList']:
-                dot.node(ep[1], shape="circle")
+                dot.node(ep[1], shape="component")
                 dot.edge(ep[1], r)
-                dot.edge(ep[1], c)
 
-dot.unflatten(stagger=6).render("DeploymentMap")
+dot.unflatten(stagger=3).render("DeploymentMap")
