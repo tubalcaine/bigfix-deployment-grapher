@@ -11,6 +11,8 @@ parser.add_argument("-g", "--groupProperty", type=str,
 conf = parser.parse_args()
 
 # First, pull all the "registration servers"
+# We have to query separately because we need the root and relays in place first
+# so we can assign regular endpoints to them as we process them. So two queries.
 treeme = f'''(id of it, name of it, 
 last report time of it, relay server flag of it, 
 root server flag of it, relay server of it,
@@ -44,7 +46,9 @@ print(cqr)
 # This will hold a dictionary of relay names
 relay = {}
 # This will hold a dictionary of IP Addresses that refer to the same 
-# relay "objects" as the relay dict.
+# relay "objects" as the relay dict. We call this "ipIdx", but it will use
+# unique values of whatever BigFix computer property you use as the -g 
+# command line switch.
 ipIdx = {}
 
 root = None
@@ -72,5 +76,15 @@ for comp in compList:
         # This is an endpoint
         print("endpoint <-------------")
         print(comp)
+        # First, find the endpoint's relay
+        rName = str(comp[5]).removesuffix(f":{conf.bfport}")
+        if rName in relay.keys():
+            # We can find the relay by name key
+            print(relay.keys())
+            pass
+        else:
+            # We need to try
+            print("Relay not found")
+            pass
 
 print("Done!")
