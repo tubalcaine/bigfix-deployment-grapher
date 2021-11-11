@@ -1,14 +1,17 @@
 import bigfixREST
 import argparse
 import ipaddress
+import graphviz
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--bfserver", type=str, help="BigFix REST Server name/IP address", default="10.10.220.60")
+parser.add_argument("-s", "--bfserver", type=str, help="BigFix REST Server name/IP address", required=True)
 parser.add_argument("-p", "--bfport", type=int, help="BigFix Port number (default 52311)", default=52311)
-parser.add_argument("-U", "--bfuser", type=str, help="BigFix Console/REST User name", default="IEMAdmin")
-parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password")
+parser.add_argument("-U", "--bfuser", type=str, help="BigFix Console/REST User name", required=True)
+parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password", required=True)
 parser.add_argument("-g", "--groupProperty", type=str, 
-    help="Name of BigFix COmputer Property to group/count", default="Subnet Address")
+    help="Name of BigFix Computer Property to group/count on", default="Subnet Address")
+parser.add_argument('-m', "--map", type=str, 
+    help="Relay name map fromName:toName[,fromName:toName...]")
 conf = parser.parse_args()
 
 # First, pull all the "registration servers"
@@ -34,6 +37,13 @@ values of property results whose (name of property of it = "{conf.groupProperty}
 ) 
 of bes computers whose (not relay server flag of it and not root server flag of it)
 '''.strip()
+
+# Initialize the relay map
+rMap = {}
+
+for mapval in str(conf.map).split(","):
+    name, value = mapval.split(":")
+    rMap[name] = value
 
 bf = bigfixREST.bigfixRESTConnection(conf.bfserver, int(conf.bfport), conf.bfuser, conf.bfpass)
 
@@ -61,7 +71,10 @@ for comp in compList:
         root = comp[1]
         relay[root] = {}
         relay[root]['comp'] = comp
+        relay[root]['count'] = 1
         relay[root]['groups'] = {}
+        # Root is its own parent (I decided)
+        relay[root]['parent'] = comp[1]
         for ip in str(comp[6]).split("|"):
             ipIdx[ip] = relay[root]
     elif comp[3] == True:
@@ -70,7 +83,9 @@ for comp in compList:
         rhost = comp[1]
         relay[rhost] = {}
         relay[rhost]['comp'] = comp
+        relay[rhost]['count'] = 1
         relay[rhost]['groups'] = {}
+        relay[rhost]['parent'] = str(comp[5]).removesuffix(f":{conf.bfport}")
         for ip in str(comp[6]).split("|"):
             ipIdx[ip] = relay[rhost]
     else:
@@ -91,13 +106,52 @@ for comp in compList:
             if rName.find(".") > 0:
                 rName = rName[0:rName.find(".")]
 
+        epRelay = None
+
         if rName in relay.keys():
             # We can find the relay by name key
-            print(relay.keys())
-            pass
+            epRelay = relay[rName]
         else:
-            # We need to try
-            print("Relay not found")
-            pass
+            # We need to try ip addresses
+            if rName in ipIdx.keys():
+                epRelay = ipIdx[rName]
+            elif rName in rMap.keys():
+                epRelay = relay[rMap[rName]]
+            else:
+                print("Relay not found")
 
-print("Done!")
+        # If we could not find the relay, we must skip the endpoint
+        if (epRelay == None):
+            print(f"Warning: We could not locate the relay {rName} using name or IP address")
+            continue
+
+        # Increment the unique count
+        epRelay['count'] += 1
+
+        for grp in str(comp[7]).split("|"):
+            if grp in epRelay['groups'].keys():
+                epRelay['groups'][grp]['count'] += 1
+                epRelay['groups'][grp]['compList'] += comp
+            else:
+                epRelay['groups'][grp] = {'count' : 1,
+                    'compList' : [comp] }
+            
+        print(epRelay)
+
+## AT THIS POINT we have a recursive data structure containing all the relays in
+## the deployment with all the endpoints attached to them, grouped by the grouping
+## property. Let's start rendering with graphviz
+
+dot = graphviz.Digraph(conf.bfserver + ":" + str(conf.bfport))
+dot.attr(concentrate="true", fontsize="8", nodesep="0.2", ranksep="1.0", ratio="auto", rankdir="BT" )
+
+for r in relay.keys():
+    rly = relay[r]
+    dot.node(r, shape="box3d", label=f"{r} - {rly['count']} unique endpoints")
+    dot.edge(r, rly['parent'])
+    for c in rly['groups'].keys():
+        grp = rly['groups'][c]
+        dot.node(c, label=f"Subnet {c} - {grp['count']} endpoints", shape="box")
+        dot.edge(c, r)
+
+dot.unflatten(stagger=3).render("DeploymentMap")
