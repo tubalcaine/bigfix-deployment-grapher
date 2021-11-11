@@ -12,6 +12,7 @@ parser.add_argument("-g", "--groupProperty", type=str,
     help="Name of BigFix Computer Property to group/count on", default="Subnet Address")
 parser.add_argument('-m', "--map", type=str, 
     help="Relay name map fromName:toName[,fromName:toName...]")
+parser.add_argument("-d", "--detail", action='store_true', help="Create nodes for each endpoint")
 conf = parser.parse_args()
 
 # First, pull all the "registration servers"
@@ -131,13 +132,11 @@ for comp in compList:
         for grp in str(comp[7]).split("|"):
             if grp in epRelay['groups'].keys():
                 epRelay['groups'][grp]['count'] += 1
-                epRelay['groups'][grp]['compList'] += comp
+                epRelay['groups'][grp]['compList'] += [comp]
             else:
                 epRelay['groups'][grp] = {'count' : 1,
                     'compList' : [comp] }
-            
-        print(epRelay)
-
+        
 ## AT THIS POINT we have a recursive data structure containing all the relays in
 ## the deployment with all the endpoints attached to them, grouped by the grouping
 ## property. Let's start rendering with graphviz
@@ -153,5 +152,11 @@ for r in relay.keys():
         grp = rly['groups'][c]
         dot.node(c, label=f"Subnet {c} - {grp['count']} endpoints", shape="box")
         dot.edge(c, r)
+        ## Detail means a node for every endpoint
+        if conf.detail:
+            for ep in grp['compList']:
+                dot.node(ep[1], shape="circle")
+                dot.edge(ep[1], r)
+                dot.edge(ep[1], c)
 
-dot.unflatten(stagger=3).render("DeploymentMap")
+dot.unflatten(stagger=6).render("DeploymentMap")
