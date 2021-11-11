@@ -1,11 +1,12 @@
 import bigfixREST
 import argparse
+import ipaddress
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--bfserver", type=str, help="BigFix REST Server name/IP address", default="10.10.220.60")
 parser.add_argument("-p", "--bfport", type=int, help="BigFix Port number (default 52311)", default=52311)
 parser.add_argument("-U", "--bfuser", type=str, help="BigFix Console/REST User name", default="IEMAdmin")
-parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password", default="BigFix@123")
+parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password")
 parser.add_argument("-g", "--groupProperty", type=str, 
     help="Name of BigFix COmputer Property to group/count", default="Subnet Address")
 conf = parser.parse_args()
@@ -78,6 +79,18 @@ for comp in compList:
         print(comp)
         # First, find the endpoint's relay
         rName = str(comp[5]).removesuffix(f":{conf.bfport}")
+
+        # See if we have an ip address on our hands
+        try:
+            ip = ipaddress.ip_address(rName)
+        except ValueError:
+            ip = None
+
+        # if we do not, see if we have domain suffix on the host name
+        if not ip:
+            if rName.find(".") > 0:
+                rName = rName[0:rName.find(".")]
+
         if rName in relay.keys():
             # We can find the relay by name key
             print(relay.keys())
