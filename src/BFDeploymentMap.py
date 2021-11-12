@@ -42,9 +42,10 @@ of bes computers whose (not relay server flag of it and not root server flag of 
 # Initialize the relay map
 rMap = {}
 
-for mapval in str(conf.map).split(","):
-    name, value = mapval.split(":")
-    rMap[name] = value
+if conf.map:
+    for mapval in str(conf.map).split(","):
+        name, value = mapval.split(":")
+        rMap[name] = value
 
 bf = bigfixREST.bigfixRESTConnection(conf.bfserver, int(conf.bfport), conf.bfuser, conf.bfpass)
 
@@ -86,7 +87,7 @@ for comp in compList:
         relay[rhost]['comp'] = comp
         relay[rhost]['count'] = 1
         relay[rhost]['groups'] = {}
-        relay[rhost]['parent'] = str(comp[5]).removesuffix(f":{conf.bfport}")
+        relay[rhost]['parent'] = str(comp[5]).split(f":{conf.bfport}")[0]
         for ip in str(comp[6]).split("|"):
             ipIdx[ip] = relay[rhost]
     else:
@@ -94,7 +95,7 @@ for comp in compList:
         print("endpoint <-------------")
         print(comp)
         # First, find the endpoint's relay
-        rName = str(comp[5]).removesuffix(f":{conf.bfport}")
+        rName = str(comp[5]).split(f":{conf.bfport}")[0]
 
         # See if we have an ip address on our hands
         try:
