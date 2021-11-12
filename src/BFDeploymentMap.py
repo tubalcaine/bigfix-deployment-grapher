@@ -18,9 +18,9 @@ conf = parser.parse_args()
 # First, pull all the "registration servers"
 # We have to query separately because we need the root and relays in place first
 # so we can assign regular endpoints to them as we process them. So two queries.
-treeme = f'''(id of it, name of it, 
+treeme = f'''(id of it, name of it as lowercase, 
 last report time of it, relay server flag of it, 
-root server flag of it, relay server of it,
+root server flag of it, relay server of it as lowercase,
 concatenation "|" of (ip addresses of it as string),
 concatenation "|" of 
 values of property results whose (name of property of it = "{conf.groupProperty}") of it
@@ -29,9 +29,9 @@ of bes computers whose (relay server flag of it or root server flag of it)
 '''.strip()
 
 # Now pull all the "regular" endpoints
-compme = f'''(id of it, name of it, 
+compme = f'''(id of it, name of it as lowercase, 
 last report time of it, relay server flag of it, 
-root server flag of it, relay server of it,
+root server flag of it, relay server of it as lowercase,
 concatenation "|" of (ip addresses of it as string),
 concatenation "|" of 
 values of property results whose (name of property of it = "{conf.groupProperty}") of it
