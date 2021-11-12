@@ -143,20 +143,25 @@ for comp in compList:
 ## property. Let's start rendering with graphviz
 
 dot = graphviz.Digraph(conf.bfserver + ":" + str(conf.bfport))
-dot.attr(concentrate="true", fontsize="8", nodesep="0.2", ranksep="1.0", ratio="auto", rankdir="BT" )
+dot.attr(concentrate="true", fontsize="8", fontname="Nimbus Sans",
+    nodesep="0.2", ranksep="0.75", ratio="auto", 
+    rankdir="BT", size="11.0,8.5")
 
 for r in relay.keys():
     rly = relay[r]
     dot.node(r, color="red", shape="box3d", label=f"{r} - {rly['count']} unique endpoints")
-    dot.edge(r, rly['parent'])
+    dot.edge(r, rly['parent'], penwidth="1.5")
     for c in rly['groups'].keys():
         grp = rly['groups'][c]
-        dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
-        dot.edge(c, r)
+#        dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
+#        dot.edge(c, r, penwidth="1.5")
         ## Detail means a node for every endpoint
         if conf.detail:
             for ep in grp['compList']:
                 dot.node(ep[1], color="blue", shape="component")
-                dot.edge(ep[1], r)
+                dot.edge(ep[1], r, penwidth="1.5")
+        else:
+            dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
+            dot.edge(c, r, penwidth="1.5")
 
 dot.unflatten(stagger=3).render("DeploymentMap")
