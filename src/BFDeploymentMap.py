@@ -147,16 +147,16 @@ dot.attr(concentrate="true", fontsize="8", nodesep="0.2", ranksep="1.0", ratio="
 
 for r in relay.keys():
     rly = relay[r]
-    dot.node(r, shape="box3d", label=f"{r} - {rly['count']} unique endpoints")
+    dot.node(r, color="red", shape="box3d", label=f"{r} - {rly['count']} unique endpoints")
     dot.edge(r, rly['parent'])
     for c in rly['groups'].keys():
         grp = rly['groups'][c]
-        dot.node(c, label=f"Subnet {c} - {grp['count']} endpoints", shape="box")
+        dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
         dot.edge(c, r)
         ## Detail means a node for every endpoint
         if conf.detail:
             for ep in grp['compList']:
-                dot.node(ep[1], shape="component")
+                dot.node(ep[1], color="blue", shape="component")
                 dot.edge(ep[1], r)
 
 dot.unflatten(stagger=3).render("DeploymentMap")
