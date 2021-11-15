@@ -4,6 +4,33 @@ import ipaddress
 import graphviz
 import json
 
+
+## BFDeploymentMap
+##
+## Original author: Michael Schwarz
+## michael.schwarz@hcl.com
+## mschwarz@multitool.net
+##
+## Released under the Apache 2 License
+##
+## A python script to generate a graph of a BigFix deployment using the widely available
+## open source grpahing tool, Grpahviz (https://graphviz.org/). 
+## Graphviz must be installed and on the PATH for this script to work properly.
+##
+## Graphviz is a standard package on almost all Linux distributions, and is available
+## for download for Windows, MacOS, Solaris, and FreeBSD here:
+##
+## https://graphviz.org/download/
+##
+## NB: This script (like many do) grew well beyond its original intent. For example, the -w/-j options
+## to allow query results to be stored and re-used was added quite late, and its implementation, while
+## okay, consisted of throwing a big if-else around an already overlong script.
+##
+## There are redundant identifiers in abundance. And as an old c/c++/Java prgorammer, I do 
+## not like undeclared identifiers or identifiers of module or global scope. So there
+## is a lot of refactoring I'd like to do and see done. That said, this is a useful script
+## so I'm putting it out there. Contact me through GitHub if you'd like to help!
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--bfserver", type=str, help="BigFix REST Server name/IP address")
 parser.add_argument("-p", "--bfport", type=int, help="BigFix Port number (default 52311)", default=52311)
@@ -19,15 +46,21 @@ parser.add_argument('-m', "--map", type=str,
 parser.add_argument("-d", "--detail", action='store_true', help="Create nodes for each endpoint")
 conf = parser.parse_args()
 
-
+# A hash to store configuration parameters needed when using -j instead of queries
+# NB: This is a refactor candidate.
+cnf = {}
 ### The BIG switch: Are we reading a JSON file, or running a query?
 
 if conf.json:
     with open(conf.json, "r") as jsonfh:
-        jsdata = [].append(jsonfh.readlines())
-        jd = json.loads(jsdata.join(" "))
-        relay = jd["relay"] 
+        jd = json.load(jsonfh)
+        relay = jd["relay"]
+        cnf = jd["cnf"]
 else:
+    ## First, move arguments we need persisted in json into cnf
+    cnf["server"] = conf.server
+    cnf["port"] = conf.port
+
     # First, pull all the "registration servers"
     # We have to query separately because we need the root and relays in place first
     # so we can assign regular endpoints to them as we process them. So two queries.
@@ -163,7 +196,7 @@ else:
 ## the deployment with all the endpoints attached to them, grouped by the grouping
 ## property. Let's start rendering with graphviz
 
-dot = graphviz.Digraph(conf.bfserver + ":" + str(conf.bfport))
+dot = graphviz.Digraph(cnf["server"] + ":" + cnf["port"])
 dot.attr(concentrate="true", fontsize="8", fontname="Nimbus Sans",
     nodesep="0.2", ranksep="0.75", ratio="auto", 
     rankdir="BT", size="11.0,8.5")
@@ -185,4 +218,7 @@ for r in relay.keys():
             dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
             dot.edge(c, r, penwidth="1.5")
 
-dot.unflatten(stagger=3).render("DeploymentMap")
+dot.unflatten(stagger=3).render(conf.output)
+
+print("Done.")
+exit(0)
