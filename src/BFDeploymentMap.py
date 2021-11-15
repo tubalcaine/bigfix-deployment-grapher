@@ -187,6 +187,7 @@ else:
     if conf.writejson:
         jsdata = {}
         jsdata["relay"] = relay
+        jsdata["cnf"] = cnf
 
         with open(conf.writejson, "w") as jsonfh:
             jsonfh.write(json.dumps(jsdata))
