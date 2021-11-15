@@ -196,7 +196,7 @@ else:
 ## the deployment with all the endpoints attached to them, grouped by the grouping
 ## property. Let's start rendering with graphviz
 
-dot = graphviz.Digraph(cnf["bfserver"] + ":" + cnf["bfport"])
+dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]))
 dot.attr(concentrate="true", fontsize="8", fontname="Nimbus Sans",
     nodesep="0.2", ranksep="0.75", ratio="auto", 
     rankdir="BT", size="11.0,8.5")
