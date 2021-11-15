@@ -9,5 +9,5 @@ and busier graph. This is very much a work in progress, as it depends on
 graphviz (https://graphviz.org/download/), which is a standard package
 on most Linux systems and is avaiable as a binary install on Windows.
 This will need the grpahviz "dot" tool (and others depending on features you
-try) to bwe on yur PATH, so I recommend you choose that option on install.
+try) to be on your PATH, so I recommend you choose that option on install.
 
