@@ -58,8 +58,8 @@ if conf.json:
         cnf = jd["cnf"]
 else:
     ## First, move arguments we need persisted in json into cnf
-    cnf["server"] = conf.server
-    cnf["port"] = conf.port
+    cnf["bfserver"] = conf.bfserver
+    cnf["bfport"] = conf.bfport
 
     # First, pull all the "registration servers"
     # We have to query separately because we need the root and relays in place first
