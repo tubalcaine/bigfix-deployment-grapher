@@ -39,7 +39,13 @@ parser.add_argument("-U", "--bfuser", type=str, help="BigFix Console/REST User n
 parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password")
 parser.add_argument("-w", "--writejson", type=str, help="Write query results to json file for reuse.")
 parser.add_argument("-j", "--json", type=str, help="Use JSON from previous run instead of doing REST query")
-parser.add_argument("-o", "--output", type=str, help="Output file base name", default="DeploymentMap")
+parser.add_argument("-o", "--output", type=str, 
+    help="Output file base name", default="DeploymentMap")
+parser.add_argument("-e", "--engine", type=str, 
+    help="Specify the graphviz layout engine (dot, neato, etc.)",
+    default="dot")
+parser.add_argument("-f", "--format", type=str, help="Specify the output format",
+    default="pdf")
 parser.add_argument("-g", "--groupProperty", type=str, 
     help="Name of BigFix Computer Property to group/count on", default="Subnet Address")
 parser.add_argument('-m', "--map", type=str, 
@@ -198,7 +204,7 @@ else:
 ## the deployment with all the endpoints attached to them, grouped by the grouping
 ## property. Let's start rendering with graphviz
 
-dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]))
+dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]), engine=conf.engine)
 dot.attr(concentrate="true", fontsize="8", fontname="Nimbus Sans",
     nodesep="0.2", ranksep="0.75", ratio="auto", 
     rankdir="BT", size="11.0,8.5")
@@ -220,7 +226,7 @@ for r in relay.keys():
             dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
             dot.edge(c, r, penwidth="1.5")
 
-dot.unflatten(stagger=3).render(conf.output)
+dot.unflatten(stagger=3).render(conf.output, format=conf.format)
 
 print("Done.")
 sys.exit(0)
