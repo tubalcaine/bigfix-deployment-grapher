@@ -3,6 +3,7 @@ import argparse
 import ipaddress
 import graphviz
 import json
+import sys
 
 
 ## BFDeploymentMap
@@ -222,4 +223,4 @@ for r in relay.keys():
 dot.unflatten(stagger=3).render(conf.output)
 
 print("Done.")
-exit(0)
+sys.exit(0)
