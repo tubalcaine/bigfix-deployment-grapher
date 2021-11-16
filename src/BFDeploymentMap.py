@@ -205,8 +205,8 @@ else:
 ## property. Let's start rendering with graphviz
 
 dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]), engine=conf.engine)
-dot.attr(concentrate="true", fontsize="14",
-    nodesep="1.0", ranksep="0.75", ratio="auto", 
+dot.attr(concentrate="true", fontsize="14", 
+    ratio="auto", 
     rankdir="BT")
 dot.attr('node', fontsize="10.0", fontname="Arial")
 
