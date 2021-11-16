@@ -205,13 +205,15 @@ else:
 ## property. Let's start rendering with graphviz
 
 dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]), engine=conf.engine)
-dot.attr(concentrate="true", fontsize="8", fontname="Nimbus Sans",
-    nodesep="0.2", ranksep="0.75", ratio="auto", 
-    rankdir="BT", size="11.0,8.5")
+dot.attr(concentrate="true", fontsize="14",
+    nodesep="1.0", ranksep="0.75", ratio="auto", 
+    rankdir="BT")
+dot.attr('node', fontsize="10.0", fontname="Arial")
 
 for r in relay.keys():
     rly = relay[r]
-    dot.node(r, color="red", shape="box3d", label=f"{r} - {rly['count']} unique endpoints")
+    dot.node(r, color="red", shape="box3d", 
+        root=str(rly["comp"][4]), label=f"{r} - {rly['count']} unique endpoints")
     dot.edge(r, rly['parent'], penwidth="1.5")
     for c in rly['groups'].keys():
         grp = rly['groups'][c]
