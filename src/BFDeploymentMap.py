@@ -53,6 +53,10 @@ parser.add_argument('-m', "--map", type=str,
 parser.add_argument("-d", "--detail", action='store_true', help="Create nodes for each endpoint")
 conf = parser.parse_args()
 
+if not conf.json and (not conf.bfserver or not conf.bfuser or not conf.bfpass):
+    parser.error("You must specifu either --json or the BigFix REST parameters\n")
+
+
 # A hash to store configuration parameters needed when using -j instead of queries
 # NB: This is a refactor candidate.
 cnf = {}
@@ -100,6 +104,7 @@ else:
             name, value = mapval.split(":")
             rMap[name] = value
 
+    ## Must have EITHER --json or --bfserver
     bf = bigfixREST.bigfixRESTConnection(conf.bfserver, int(conf.bfport), conf.bfuser, conf.bfpass)
 
     rqr = bf.srQueryJson(treeme)
@@ -213,7 +218,8 @@ dot.attr('node', fontsize="10.0", fontname="Arial")
 for r in relay.keys():
     rly = relay[r]
     dot.node(r, color="red", shape="box3d", 
-        root=str(rly["comp"][4]), label=f"{r} - {rly['count']} unique endpoints")
+        ## Add group parameters to the relay label.
+        root=str(rly["comp"][4]), label=f"{r} - {rly['count']} unique endpoints\n")
     dot.edge(r, rly['parent'], penwidth="1.5")
     for c in rly['groups'].keys():
         grp = rly['groups'][c]
