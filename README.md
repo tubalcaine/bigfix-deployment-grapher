@@ -1,7 +1,7 @@
 # bigfix-deployment-grapher
 
 This project will graph the relay relationships in a BigFix deployment,
-providing a roll-up of endpoints grouped by an arbitrary coomputer property,
+providing a roll-up of endpoints grouped by an arbitrary computer property,
 including counts.
 
 It also has options for plotting all the endpoints, resulting in a larger
