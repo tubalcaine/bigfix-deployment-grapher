@@ -50,6 +50,7 @@ parser.add_argument("-g", "--groupProperty", type=str,
     help="Name of BigFix Computer Property to group/count on", default="Subnet Address")
 parser.add_argument('-m', "--map", type=str, 
     help="Relay name map fromName:toName[,fromName:toName...]")
+parser.add_argument("-r", "--relaysonly", action="store_true", help="Render relays only")
 parser.add_argument("-d", "--detail", action='store_true', help="Create nodes for each endpoint")
 conf = parser.parse_args()
 
@@ -108,9 +109,13 @@ else:
     bf = bigfixREST.bigfixRESTConnection(conf.bfserver, int(conf.bfport), conf.bfuser, conf.bfpass)
 
     rqr = bf.srQueryJson(treeme)
-    cqr = bf.srQueryJson(compme)
 
-    compList = rqr['result'] + cqr['result']
+    # The relaysonly flag was added very late in the development
+    # of this app. Surprisingly, implementing it was a lot easier than
+    # planned!
+    if not conf.relaysonly:
+        cqr = bf.srQueryJson(compme)
+        compList = rqr['result'] + cqr['result']
 
     print(cqr)
 
