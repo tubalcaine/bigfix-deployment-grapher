@@ -42,3 +42,19 @@ optional arguments:
   -m MAP, --map MAP     Relay name map fromName:toName[,fromName:toName...]
   -r, --relaysonly      Render relays only
   -d, --detail          Create nodes for each endpoint
+
+
+The flag set has grown, let us say, "organically." Not all flags make sense
+together and no effort has been made to see if you choices make sense at
+runtime. The major choices are about whether you will query the BigFix REST API.
+Pulling data from the REST API on each run is the "usual" way to do it. You must
+specify the BFSERVER, BFUSER, and BFPASS to use the API. If the port is not the
+default of 52311, you must specify BFPORT.
+
+When you pull the data from the REST API, you may choose the "-w WRITEJSON"
+option to save all the API query results in a json file you can re-use by
+using the "-j JSON" switch instead of all the REST API switches. This json
+file feature was added to support very large deployments where the cost of
+queries is too high to do repeatedly.
+
+The "-o OUTPUT" allows you to specify a "base" for output files. 
