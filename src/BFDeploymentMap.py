@@ -116,8 +116,8 @@ else:
     if not conf.relaysonly:
         cqr = bf.srQueryJson(compme)
         compList = rqr['result'] + cqr['result']
-
-    print(cqr)
+    else:
+        compList = rqr['result']
 
     # This will hold a dictionary of relay names
     relay = {}
