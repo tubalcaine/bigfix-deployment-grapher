@@ -207,7 +207,7 @@ else:
         jsdata["cnf"] = cnf
 
         with open(conf.writejson, "w") as jsonfh:
-            jsonfh.write(json.dumps(jsdata))
+            jsonfh.write(json.dumps(jsdata, sort_keys=True, indent=2))
 
 
 ## AT THIS POINT we have a recursive data structure containing all the relays in
