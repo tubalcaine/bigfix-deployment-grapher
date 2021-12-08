@@ -14,6 +14,7 @@ try) to be on your PATH, so I recommend you choose that option on install.
 As of the last update to this README, these are the supported command line
 switches and flags:
 
+~~~
 usage: BFDeploymentMap.exe [-h] [-s BFSERVER] [-p BFPORT] [-U BFUSER]
  [-P BFPASS] [-w WRITEJSON] [-j JSON] [-o OUTPUT] [-e ENGINE]
  [-f FORMAT] [-g GROUPPROPERTY] [-m MAP] [-r] [-d]
@@ -42,3 +43,4 @@ optional arguments:
   -m MAP, --map MAP     Relay name map fromName:toName[,fromName:toName...]
   -r, --relaysonly      Render relays only
   -d, --detail          Create nodes for each endpoint
+~~~
