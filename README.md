@@ -7,13 +7,14 @@ including counts.
 It also has options for plotting all the endpoints, resulting in a larger
 and busier graph. This is very much a work in progress, as it depends on
 graphviz (https://graphviz.org/download/), which is a standard package
-on most Linux systems and is avaiable as a binary install on Windows.
+on most Linux systems and is available as a binary install on Windows.
 This will need the grpahviz "dot" tool (and others depending on features you
 try) to be on your PATH, so I recommend you choose that option on install.
 
 As of the last update to this README, these are the supported command line
 switches and flags:
 
+~~~
 usage: BFDeploymentMap.exe [-h] [-s BFSERVER] [-p BFPORT] [-U BFUSER]
  [-P BFPASS] [-w WRITEJSON] [-j JSON] [-o OUTPUT] [-e ENGINE]
  [-f FORMAT] [-g GROUPPROPERTY] [-m MAP] [-r] [-d]
@@ -42,7 +43,7 @@ optional arguments:
   -m MAP, --map MAP     Relay name map fromName:toName[,fromName:toName...]
   -r, --relaysonly      Render relays only
   -d, --detail          Create nodes for each endpoint
-
+~~~
 
 The flag set has grown, let us say, "organically." Not all flags make sense
 together and no effort has been made to see if you choices make sense at
@@ -58,3 +59,4 @@ file feature was added to support very large deployments where the cost of
 queries is too high to do repeatedly.
 
 The "-o OUTPUT" allows you to specify a "base" for output files. 
+
