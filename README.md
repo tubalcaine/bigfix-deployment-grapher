@@ -46,7 +46,7 @@ optional arguments:
 ~~~
 
 The flag set has grown, let us say, "organically." Not all flags make sense
-together and no effort has been made to see if you choices make sense at
+together and no effort has been made to see if your choices make sense at
 runtime. The major choices are about whether you will query the BigFix REST API.
 Pulling data from the REST API on each run is the "usual" way to do it. You must
 specify the BFSERVER, BFUSER, and BFPASS to use the API. If the port is not the
