@@ -150,9 +150,9 @@ else:
             relay[rhost]['parent'] = str(comp[5]).split(f":{conf.bfport}")[0]
             for m in rMap:
                 if relay[rhost]['parent'] == m:
-                    relay[rhost]['parent'] = rMap[m]            for ip in str(comp[6]).split("|"):
-
-            ipIdx[ip] = relay[rhost]
+                    relay[rhost]['parent'] = rMap[m]            
+            for ip in str(comp[6]).split("|"):
+                ipIdx[ip] = relay[rhost]
         else:
             # This is an endpoint
             print("endpoint <-------------")
