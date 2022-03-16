@@ -137,6 +137,11 @@ else:
             relay[root]['groups'] = {}
             # Root is its own parent (I decided)
             relay[root]['parent'] = comp[1]
+            
+            for m in rMap:
+                if relay[root]['parent'] == m:
+                    relay[root]['parent'] = rMap[m]
+
             for ip in str(comp[6]).split("|"):
                 ipIdx[ip] = relay[root]
         elif comp[3] == True:
