@@ -15,7 +15,7 @@ import bigfixREST
 ## Released under the Apache 2 License
 ##
 ## A python script to generate a graph of a BigFix deployment using the widely available
-## open source grpahing tool, Grpahviz (https://graphviz.org/) 
+## open source grpahing tool, Grpahviz (https://graphviz.org/)
 ## Graphviz must be installed and on the PATH for this script to work properly.
 ##
 ## Graphviz is a standard package on almost all Linux distributions, and is available
@@ -189,7 +189,7 @@ else:
                     print("Relay not found")
 
             # If we could not find the relay, we must skip the endpoint
-            if (epRelay == None):
+            if epRelay is None:
                 print(f"Warning: We could not locate the relay {rName} using name or IP address")
                 continue
 
@@ -209,7 +209,7 @@ else:
         jsdata["relay"] = relay
         jsdata["cnf"] = cnf
 
-        with open(conf.writejson, "w") as jsonfh:
+        with open(conf.writejson, "w", encoding="utf-8") as jsonfh:
             jsonfh.write(json.dumps(jsdata, sort_keys=True, indent=2))
 
 
@@ -218,14 +218,14 @@ else:
 ## property. Let's start rendering with graphviz
 
 dot = graphviz.Digraph(cnf["bfserver"] + ":" + str(cnf["bfport"]), engine=conf.engine)
-dot.attr(concentrate="true", fontsize="14", 
-    ratio="auto", 
+dot.attr(concentrate="true", fontsize="14",
+    ratio="auto",
     rankdir="BT")
 dot.attr('node', fontsize="10.0", fontname="Arial")
 
 for r in relay.keys():
     rly = relay[r]
-    dot.node(r, color="red", shape="box3d", 
+    dot.node(r, color="red", shape="box3d",
         ## Add group parameters to the relay label.
         root=str(rly["comp"][4]), label=f"{r} - {rly['count']} unique endpoints\n")
     dot.edge(r, rly['parent'], penwidth="1.5")
