@@ -55,7 +55,7 @@ parser.add_argument("-d", "--detail", action='store_true', help="Create nodes fo
 conf = parser.parse_args()
 
 if not conf.json and (not conf.bfserver or not conf.bfuser or not conf.bfpass):
-    parser.error("You must specifu either --json or the BigFix REST parameters\n")
+    parser.error("You must specify either --json or the BigFix REST parameters\n")
 
 
 # A hash to store configuration parameters needed when using -j instead of queries
@@ -98,7 +98,7 @@ else:
     '''.strip()
 
     # Initialize the relay map
-    rMap = {}
+    rMap = { }
 
     if conf.map:
         for mapval in str(conf.map).split(","):
@@ -113,11 +113,8 @@ else:
     # The relaysonly flag was added very late in the development
     # of this app. Surprisingly, implementing it was a lot easier than
     # planned!
-    if not conf.relaysonly:
-        cqr = bf.srQueryJson(compme)
-        compList = rqr['result'] + cqr['result']
-    else:
-        compList = rqr['result']
+    cqr = bf.srQueryJson(compme)
+    compList = rqr['result'] + cqr['result']
 
     # This will hold a dictionary of relay names
     relay = {}
@@ -151,8 +148,11 @@ else:
             relay[rhost]['count'] = 1
             relay[rhost]['groups'] = {}
             relay[rhost]['parent'] = str(comp[5]).split(f":{conf.bfport}")[0]
-            for ip in str(comp[6]).split("|"):
-                ipIdx[ip] = relay[rhost]
+            for m in rMap:
+                if relay[rhost]['parent'] == m:
+                    relay[rhost]['parent'] = rMap[m]            for ip in str(comp[6]).split("|"):
+
+            ipIdx[ip] = relay[rhost]
         else:
             # This is an endpoint
             print("endpoint <-------------")
@@ -226,18 +226,21 @@ for r in relay.keys():
         ## Add group parameters to the relay label.
         root=str(rly["comp"][4]), label=f"{r} - {rly['count']} unique endpoints\n")
     dot.edge(r, rly['parent'], penwidth="1.5")
-    for c in rly['groups'].keys():
-        grp = rly['groups'][c]
-#        dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
-#        dot.edge(c, r, penwidth="1.5")
-        ## Detail means a node for every endpoint
-        if conf.detail:
-            for ep in grp['compList']:
-                dot.node(ep[1], color="blue", shape="component")
-                dot.edge(ep[1], r, penwidth="1.5")
-        else:
-            dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
-            dot.edge(c, r, penwidth="1.5")
+
+    ## Now we still query for all computers in "relaysonly" so we can get an accurate count
+    if not conf.relaysonly:
+        for c in rly['groups'].keys():
+            grp = rly['groups'][c]
+    #        dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
+    #        dot.edge(c, r, penwidth="1.5")
+            ## Detail means a node for every endpoint
+            if conf.detail:
+                for ep in grp['compList']:
+                    dot.node(ep[1], color="blue", shape="component")
+                    dot.edge(ep[1], r, penwidth="1.5")
+            else:
+                dot.node(c, color="green", label=f"{conf.groupProperty} {c} - {grp['count']} endpoints", shape="box")
+                dot.edge(c, r, penwidth="1.5")
 
 dot.unflatten(stagger=3).render(conf.output, format=conf.format)
 
