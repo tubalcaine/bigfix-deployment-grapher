@@ -1,9 +1,9 @@
-import bigfixREST
 import argparse
 import ipaddress
-import graphviz
 import json
 import sys
+import graphviz
+import bigfixREST
 
 
 ## BFDeploymentMap
@@ -15,7 +15,7 @@ import sys
 ## Released under the Apache 2 License
 ##
 ## A python script to generate a graph of a BigFix deployment using the widely available
-## open source grpahing tool, Grpahviz (https://graphviz.org/). 
+## open source grpahing tool, Grpahviz (https://graphviz.org/) 
 ## Graphviz must be installed and on the PATH for this script to work properly.
 ##
 ## Graphviz is a standard package on almost all Linux distributions, and is available
@@ -27,7 +27,7 @@ import sys
 ## to allow query results to be stored and re-used was added quite late, and its implementation, while
 ## okay, consisted of throwing a big if-else around an already overlong script.
 ##
-## There are redundant identifiers in abundance. And as an old c/c++/Java prgorammer, I do 
+## There are redundant identifiers in abundance. And as an old c/c++/Java prgorammer, I do
 ## not like undeclared identifiers or identifiers of module or global scope. So there
 ## is a lot of refactoring I'd like to do and see done. That said, this is a useful script
 ## so I'm putting it out there. Contact me through GitHub if you'd like to help!
@@ -39,16 +39,16 @@ parser.add_argument("-U", "--bfuser", type=str, help="BigFix Console/REST User n
 parser.add_argument("-P", "--bfpass", type=str, help="BigFix Console/REST Password")
 parser.add_argument("-w", "--writejson", type=str, help="Write query results to json file for reuse.")
 parser.add_argument("-j", "--json", type=str, help="Use JSON from previous run instead of doing REST query")
-parser.add_argument("-o", "--output", type=str, 
+parser.add_argument("-o", "--output", type=str,
     help="Output file base name", default="DeploymentMap")
-parser.add_argument("-e", "--engine", type=str, 
+parser.add_argument("-e", "--engine", type=str,
     help="Specify the graphviz layout engine (dot, neato, etc.)",
     default="dot")
 parser.add_argument("-f", "--format", type=str, help="Specify the output format",
     default="pdf")
-parser.add_argument("-g", "--groupProperty", type=str, 
+parser.add_argument("-g", "--groupProperty", type=str,
     help="Name of BigFix Computer Property to group/count on", default="Subnet Address")
-parser.add_argument('-m', "--map", type=str, 
+parser.add_argument('-m', "--map", type=str,
     help="Relay name map fromName:toName[,fromName:toName...]")
 parser.add_argument("-r", "--relaysonly", action="store_true", help="Render relays only")
 parser.add_argument("-d", "--detail", action='store_true', help="Create nodes for each endpoint")
@@ -64,7 +64,7 @@ cnf = {}
 ### The BIG switch: Are we reading a JSON file, or running a query?
 
 if conf.json:
-    with open(conf.json, "r") as jsonfh:
+    with open(conf.json, "r", encoding="utf-8") as jsonfh:
         jd = json.load(jsonfh)
         relay = jd["relay"]
         cnf = jd["cnf"]
@@ -76,7 +76,7 @@ else:
     # First, pull all the "registration servers"
     # We have to query separately because we need the root and relays in place first
     # so we can assign regular endpoints to them as we process them. So two queries.
-    treeme = f'''(id of it, name of it as lowercase, 
+    treeme = f'''(id of it, name of it as lowercase,
     last report time of it, relay server flag of it, 
     root server flag of it, relay server of it as lowercase,
     concatenation "|" of (ip addresses of it as string),
@@ -87,7 +87,7 @@ else:
     '''.strip()
 
     # Now pull all the "regular" endpoints
-    compme = f'''(id of it, name of it as lowercase, 
+    compme = f'''(id of it, name of it as lowercase,
     last report time of it, relay server flag of it, 
     root server flag of it, relay server of it as lowercase,
     concatenation "|" of (ip addresses of it as string),
@@ -118,16 +118,14 @@ else:
 
     # This will hold a dictionary of relay names
     relay = {}
-    # This will hold a dictionary of IP Addresses that refer to the same 
+    # This will hold a dictionary of IP Addresses that refer to the same
     # relay "objects" as the relay dict. We call this "ipIdx", but it will use
-    # unique values of whatever BigFix computer property you use as the -g 
+    # unique values of whatever BigFix computer property you use as the -g
     # command line switch.
     ipIdx = {}
 
-    root = None
-
     for comp in compList:
-        if comp[4] == True:
+        if comp[4] is True:
             # This is the root server
             print("*****ROOT*****")
             root = comp[1]
@@ -144,7 +142,7 @@ else:
 
             for ip in str(comp[6]).split("|"):
                 ipIdx[ip] = relay[root]
-        elif comp[3] == True:
+        elif comp[3] is True:
             # This is a relay
             print("------------> RELAY")
             rhost = comp[1]
@@ -152,10 +150,10 @@ else:
             relay[rhost]['comp'] = comp
             relay[rhost]['count'] = 1
             relay[rhost]['groups'] = {}
-            relay[rhost]['parent'] = str(comp[5]).split(f":{conf.bfport}")[0]
+            relay[rhost]['parent'] = str(comp[5]).split(f":{conf.bfport}", maxsplit=1)[0]
             for m in rMap:
                 if relay[rhost]['parent'] == m:
-                    relay[rhost]['parent'] = rMap[m]            
+                    relay[rhost]['parent'] = rMap[m]
             for ip in str(comp[6]).split("|"):
                 ipIdx[ip] = relay[rhost]
         else:
