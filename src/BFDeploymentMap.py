@@ -83,6 +83,13 @@ parser.add_argument(
 parser.add_argument(
     "-d", "--detail", action="store_true", help="Create nodes for each endpoint"
 )
+parser.add_argument(
+    "-w", "--workdir", 
+    type=str,
+    help="Working directory (base path for all OUTPUT)",
+    default="."
+)
+
 conf = parser.parse_args()
 
 if not conf.json and (not conf.bfserver or not conf.bfuser or not conf.bfpass):
@@ -244,7 +251,7 @@ else:
         jsdata["relay"] = relay
         jsdata["cnf"] = cnf
 
-        with open(conf.writejson, "w", encoding="utf-8") as jsonfh:
+        with open(f"{conf.workdir}/{conf.writejson}", "w", encoding="utf-8") as jsonfh:
             jsonfh.write(json.dumps(jsdata, sort_keys=True, indent=2))
 
 
@@ -288,7 +295,7 @@ for r in relay.keys():
 
 # Now render into any and all requested formats
 for fmt in conf.format.split(","):
-    dot.unflatten(stagger=3).render(conf.output, format=fmt)
+    dot.unflatten(stagger=3).render(f"{conf.workdir}/{conf.output}", format=fmt)
 
 print("Done.")
 sys.exit(0)
