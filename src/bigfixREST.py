@@ -1,6 +1,14 @@
-import requests
+"""
+bigfixREST.py - I started writing a general purpose BigFix REST API
+wrapper before I realized one exists. FIXME: This should be eliminated
+and replaced with the pip module "besapi" at some point.
+
+See: https://pypi.org/project/besapi/
+"""
+from urllib.error import HTTPError
 import json
 import xml.etree.ElementTree as ET
+import requests
 
 # This is here ONLY to suppress self-signed certoficate warnings
 import urllib3
@@ -10,39 +18,52 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 ## bigFixActionResult class
-class bigfixActionResult:
+class BigfixActionResult:
+    """
+    BigFixActionResult - A class representing the result of a
+    BigFix API /api/action POST
+    """
+
     def __init__(self, resxml):
         self.xml = resxml
         self.root = ET.fromstring(resxml)
 
-    def getActionID(self):
+    def get_action_id(self):
         thing = self.root.findall("Action/ID")
-        id = thing[0].text
-        return id
+        a_id = thing[0].text
+        return a_id
 
-    def getActionURL(self):
+    def get_action_url(self):
         thing = self.root.findall("Action")
         attrs = thing[0].attrib
         return attrs["Resource"]
 
-    def getActionResultXML(self):
+    def get_action_result_xml(self):
         return self.xml
 
 
 ## bigfixRESTConnection class
-class bigfixRESTConnection:
+class BigfixRESTConnection:
+    """
+    BigFixRESTConnection - A class that represents one network connection
+    to one BigFix Root Server REST API
+    """
+
     def __init__(self, bfserver, bfport, bfuser, bfpass):
         self.bfserver = bfserver
         self.bfport = bfport
         self.bfuser = bfuser
         self.bfpass = bfpass
         self.sess = requests.Session()
-        self.url = "https://" + self.bfserver + ":" + str(self.bfport)
+        self.url = f"https://{self.bfserver}:{str(self.bfport)}"
 
         self.sess.auth = (self.bfuser, self.bfpass)
-        resp = self.sess.get(self.url + "/api/login", verify=False)
+        auth_url = f"{self.url}/api/login"
+        resp = self.sess.get(auth_url, verify=False)
+        if resp.status_code < 200 or resp.status_code > 299:
+            raise HTTPError
 
-    def srQueryJson(self, srquery):
+    def sess_relevance_query_json(self, srquery):
         qheader = {"Content-Type": "application/x-www-form-urlencoded"}
 
         qquery = {"relevance": srquery, "output": "json"}
@@ -55,9 +76,9 @@ class bigfixRESTConnection:
         result = self.sess.send(prepped, verify=False)
 
         if result.status_code == 200:
-            rv = json.loads(result.text)
-            rv["query"] = srquery
-            return rv
+            ret_val = json.loads(result.text)
+            ret_val["query"] = srquery
+            return ret_val
 
         return None
 
@@ -69,12 +90,12 @@ class bigfixRESTConnection:
     #    def flattenQueryResult(self, qres):
     #        return None
 
-    def takeSourcedFixletAction(
+    def take_sourced_fixlet_action(
         self,
-        targetList,
-        siteId,
-        fixletId,
-        actionId="Action1",
+        target_list,
+        site_id,
+        fixlet_id,
+        action_id="Action1",
         title="Programmatic Action from Python Script",
     ):
         templ = """\
@@ -96,13 +117,13 @@ class bigfixRESTConnection:
 </BES>
 """.strip()
 
-        templ = templ.replace("__SiteID__", str(siteId))
-        templ = templ.replace("__FixletID__", str(fixletId))
-        templ = templ.replace("__ActionID__", actionId)
+        templ = templ.replace("__SiteID__", str(site_id))
+        templ = templ.replace("__FixletID__", str(fixlet_id))
+        templ = templ.replace("__ActionID__", action_id)
         templ = templ.replace("__Title__", title)
 
         targets = ""
-        for tgt in targetList:
+        for tgt in target_list:
             targets += "<ComputerName>" + tgt + "</ComputerName>\n"
 
         templ = templ.replace("__TargetList__", targets)
@@ -117,8 +138,7 @@ class bigfixRESTConnection:
 
         result = self.sess.send(prepped, verify=False)
 
-        if result.status_code == 200:
-            print(result)
-            return bigfixActionResult(result.content)
+        if result.status_code >= 200 and result.status_code < 300:
+            return BigfixActionResult(result.content)
         else:
             return None
