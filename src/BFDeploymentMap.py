@@ -55,7 +55,7 @@ parser.add_argument(
     help="Use JSON from previous run instead of doing REST query",
 )
 parser.add_argument(
-    "-o", "--output", type=str, help="Output file base name", default="DeploymentMap"
+    "-o", "--output", type=str, help="Output file base name", default="./DeploymentMap"
 )
 parser.add_argument(
     "-e",
@@ -82,12 +82,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "-d", "--detail", action="store_true", help="Create nodes for each endpoint"
-)
-parser.add_argument(
-    "-w", "--workdir", 
-    type=str,
-    help="Working directory (base path for all OUTPUT)",
-    default="."
 )
 
 conf = parser.parse_args()
@@ -295,7 +289,7 @@ for r in relay.keys():
 
 # Now render into any and all requested formats
 for fmt in conf.format.split(","):
-    dot.unflatten(stagger=3).render(f"{conf.workdir}/{conf.output}", format=fmt)
+    dot.unflatten(stagger=3).render(f"{conf.output}", format=fmt)
 
 print("Done.")
 sys.exit(0)
