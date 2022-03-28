@@ -65,7 +65,7 @@ parser.add_argument(
     default="dot",
 )
 parser.add_argument(
-    "-f", "--format", type=str, help="Specify the output format", default="pdf"
+    "-f", "--format", type=str, help="Specify the output format(s) -f <fmt>[,<fmt>]", default="pdf"
 )
 parser.add_argument(
     "-g",
@@ -137,16 +137,16 @@ else:
             rMap[name] = value
 
     ## Must have EITHER --json or --bfserver
-    bf = bigfixREST.bigfixRESTConnection(
+    bf = bigfixREST.BigfixRESTConnection(
         conf.bfserver, int(conf.bfport), conf.bfuser, conf.bfpass
     )
 
-    rqr = bf.srQueryJson(treeme)
+    rqr = bf.sess_relevance_query_json(treeme)
 
     # The relaysonly flag was added very late in the development
     # of this app. Surprisingly, implementing it was a lot easier than
     # planned!
-    cqr = bf.srQueryJson(compme)
+    cqr = bf.sess_relevance_query_json(compme)
     compList = rqr["result"] + cqr["result"]
 
     # This will hold a dictionary of relay names
@@ -286,7 +286,9 @@ for r in relay.keys():
                 )
                 dot.edge(c, r, penwidth="1.5")
 
-dot.unflatten(stagger=3).render(conf.output, format=conf.format)
+# Now render into any and all requested formats
+for fmt in conf.format.split(","):
+    dot.unflatten(stagger=3).render(conf.output, format=fmt)
 
 print("Done.")
 sys.exit(0)
