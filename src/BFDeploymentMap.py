@@ -65,7 +65,11 @@ parser.add_argument(
     default="dot",
 )
 parser.add_argument(
-    "-f", "--format", type=str, help="Specify the output format(s) -f <fmt>[,<fmt>]", default="pdf"
+    "-f",
+    "--format",
+    type=str,
+    help="Specify the output format(s) -f <fmt>[,<fmt>]",
+    default="pdf",
 )
 parser.add_argument(
     "-g",
