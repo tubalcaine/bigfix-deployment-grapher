@@ -245,7 +245,7 @@ else:
         jsdata["relay"] = relay
         jsdata["cnf"] = cnf
 
-        with open(f"{conf.workdir}/{conf.writejson}", "w", encoding="utf-8") as jsonfh:
+        with open(f"{conf.writejson}", "w", encoding="utf-8") as jsonfh:
             jsonfh.write(json.dumps(jsdata, sort_keys=True, indent=2))
 
 
