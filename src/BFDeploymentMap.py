@@ -174,12 +174,13 @@ else:
             # Root is its own parent (I decided)
             relay[root]["parent"] = comp[1]
 
-            for m in rMap:
-                if relay[root]["parent"] == m:
-                    relay[root]["parent"] = rMap[m]
+            for orig_relay, mappedrelay in rMap.items():
+                if relay[root]["parent"] == orig_relay:
+                    relay[root]["parent"] = mappedrelay
 
             for IP in str(comp[6]).split("|"):
                 ipIdx[IP] = relay[root]
+
         elif comp[3] is True:
             # This is a relay
             print("------------> RELAY")
@@ -191,9 +192,9 @@ else:
             relay[rhost]["parent"] = str(comp[5]).split(f":{conf.bfport}", maxsplit=1)[
                 0
             ]
-            for m in rMap:
-                if relay[rhost]["parent"] == m:
-                    relay[rhost]["parent"] = rMap[m]
+            for orig_relay, mappedrelay in rMap.items():
+                if relay[rhost]["parent"] == orig_relay:
+                    relay[rhost]["parent"] = mappedrelay
             for IP in str(comp[6]).split("|"):
                 ipIdx[IP] = relay[rhost]
         else:
@@ -214,14 +215,14 @@ else:
                 if rName.find(".") > 0:
                     rName = rName[0 : rName.find(".")]
 
-            if rName in relay.keys():
+            if rName in relay:
                 # We can find the relay by name key
                 epRelay = relay[rName]
             else:
                 # We need to try ip addresses
-                if rName in ipIdx.keys():
+                if rName in ipIdx:
                     epRelay = ipIdx[rName]
-                elif rName in rMap.keys():
+                elif rName in rMap:
                     epRelay = relay[rMap[rName]]
                 else:
                     epRelay = None
