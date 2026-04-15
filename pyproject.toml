@@ -1,0 +1,11 @@
+[project]
+name = "bigfix-deployment-grapher"
+version = "0.1.0"
+description = "Graph BigFix relay relationships and endpoint distributions using GraphViz"
+requires-python = ">=3.8"
+dependencies = [
+    "besapi",
+    "graphviz",
+    "keyring>=25.5.0",
+    "keyrings.alt",
+]

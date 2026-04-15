@@ -1,62 +1,147 @@
 # bigfix-deployment-grapher
 
-This project will graph the relay relationships in a BigFix deployment,
-providing a roll-up of endpoints grouped by an arbitrary computer property,
-including counts.
+Generates graphs of BigFix deployment infrastructure using [Graphviz](https://graphviz.org/),
+showing relay hierarchy and endpoint distributions. Endpoints can be grouped and counted
+by any BigFix computer property (subnet, OS, location, etc.).
 
-It also has options for plotting all the endpoints, resulting in a larger
-and busier graph. This is very much a work in progress, as it depends on
-graphviz (https://graphviz.org/download/), which is a standard package
-on most Linux systems and is available as a binary install on Windows.
-This will need the grpahviz "dot" tool (and others depending on features you
-try) to be on your PATH, so I recommend you choose that option on install.
+## Requirements
 
-As of the last update to this README, these are the supported command line
-switches and flags:
+- Python 3.8+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
+- Graphviz binaries installed and on your PATH — standard on most Linux distributions,
+  available for Windows/macOS/FreeBSD at https://graphviz.org/download/
 
-~~~
-usage: BFDeploymentMap.exe [-h] [-s BFSERVER] [-p BFPORT] [-U BFUSER]
- [-P BFPASS] [-w WRITEJSON] [-j JSON] [-o OUTPUT] [-e ENGINE]
- [-f FORMAT] [-g GROUPPROPERTY] [-m MAP] [-r] [-d]
+## Setup
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -s BFSERVER, --bfserver BFSERVER
-                        BigFix REST Server name/IP address
-  -p BFPORT, --bfport BFPORT
-                        BigFix Port number (default 52311)
-  -U BFUSER, --bfuser BFUSER
-                        BigFix Console/REST User name
-  -P BFPASS, --bfpass BFPASS
-                        BigFix Console/REST Password
-  -w WRITEJSON, --writejson WRITEJSON
-                        Write query results to json file for reuse.
-  -j JSON, --json JSON  Use JSON from previous run instead of doing REST query
-  -o OUTPUT, --output OUTPUT
-                        Output file base name
-  -e ENGINE, --engine ENGINE
-                        Specify the graphviz layout engine (dot, neato, etc.)
-  -f FORMAT, --format FORMAT
-                        Specify the output format
-  -g GROUPPROPERTY, --groupProperty GROUPPROPERTY
-                        Name of BigFix Computer Property to group/count on
-  -m MAP, --map MAP     Relay name map fromName:toName[,fromName:toName...]
-  -r, --relaysonly      Render relays only
-  -d, --detail          Create nodes for each endpoint
-~~~
+```bash
+uv sync                  # create .venv and install all dependencies
+uv run python src/bf_deployment_map.py [options]
 
-The flag set has grown, let us say, "organically." Not all flags make sense
-together and no effort has been made to see if your choices make sense at
-runtime. The major choices are about whether you will query the BigFix REST API.
-Pulling data from the REST API on each run is the "usual" way to do it. You must
-specify the BFSERVER, BFUSER, and BFPASS to use the API. If the port is not the
-default of 52311, you must specify BFPORT.
+# Or activate the environment first:
+source .venv/bin/activate
+python src/bf_deployment_map.py [options]
+```
 
-When you pull the data from the REST API, you may choose the "-w WRITEJSON"
-option to save all the API query results in a json file you can re-use by
-using the "-j JSON" switch instead of all the REST API switches. This json
-file feature was added to support very large deployments where the cost of
-queries is too high to do repeatedly.
+## Usage
 
-The "-o OUTPUT" allows you to specify a "base" for output files. 
+```
+usage: bf_deployment_map.py [-h] [-b BFSERVER] [-p BFPORT] [-u BFUSER]
+                            [-P BFPASS] [-k KEYCREDS] [-s SETCREDS]
+                            [-w WRITEJSON] [-j JSON] [-o OUTPUT] [-e ENGINE]
+                            [-f FORMAT] [-g GROUP_PROPERTY] [-m MAP] [-r] [-d]
+                            [-l] [-E FILE]
+```
 
+### Connection
+
+| Switch | Long | Description |
+|--------|------|-------------|
+| `-b` | `--bfserver` | BigFix REST Server hostname or IP address |
+| `-p` | `--bfport` | BigFix port number (default: 52311) |
+| `-u` | `--bfuser` | BigFix console/REST username |
+| `-P` | `--bfpass` | Password on the command line (see Password Management below) |
+
+You must supply either `--json` (cached data) or `--bfserver` + `--bfuser`. The password
+can be supplied via `--bfpass`, retrieved from the keyring via `--keycreds`, or entered
+interactively (no-echo prompt) if neither is given.
+
+### Password Management
+
+Storing your password in a keyring avoids exposing it on the command line or being
+prompted on every run.
+
+| Switch | Long | Description |
+|--------|------|-------------|
+| `-s KEY` | `--setcreds KEY` | Prompt for password and store it under KEY in the keyring, then exit |
+| `-k KEY` | `--keycreds KEY` | Retrieve the password stored under KEY from the keyring |
+| `-E FILE` | `--encrypted-keyring FILE` | Use an encrypted keyring file at FILE instead of the system keyring |
+
+**System keyring (default):** Uses the OS credential store (GNOME Keyring, KWallet,
+macOS Keychain, Windows Credential Manager, etc.).
+
+```bash
+# Store credentials once
+python src/bf_deployment_map.py -s mylab -u IEMAdmin
+
+# Run using stored credentials
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab
+```
+
+**Encrypted keyring file (`-E`):** A portable alternative backed by
+`keyrings.alt.file.EncryptedKeyring` — useful on headless systems or when you want
+a self-contained credential file. The file is AES256-encrypted and password-protected.
+
+```bash
+# Store credentials in an encrypted file
+python src/bf_deployment_map.py -s mylab -u IEMAdmin -E ~/bf-creds.cfg
+
+# Run using the encrypted file
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab -E ~/bf-creds.cfg
+```
+
+### Data Source
+
+| Switch | Long | Description |
+|--------|------|-------------|
+| `-w FILE` | `--writejson FILE` | Save API query results to a JSON file for reuse |
+| `-j FILE` | `--json FILE` | Load data from a previously saved JSON file instead of querying |
+
+On large deployments, REST queries can be slow. Use `-w` to cache results and `-j` to
+re-render without re-querying:
+
+```bash
+# Query the server and cache results
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab -w data.json -o MyGraph
+
+# Re-render from cache (no server needed)
+python src/bf_deployment_map.py -j data.json -o MyGraph -f pdf,svg
+```
+
+### Output
+
+| Switch | Long | Description |
+|--------|------|-------------|
+| `-o PREFIX` | `--output PREFIX` | Output filename base (default: `./DeploymentMap`) |
+| `-f FMT` | `--format FMT` | Output format(s), comma-separated (default: `pdf`). Any format supported by Graphviz: `pdf`, `png`, `svg`, `ps`, etc. |
+| `-e ENGINE` | `--engine ENGINE` | Graphviz layout engine (default: `dot`). Other options: `neato`, `circo`, `twopi`, etc. |
+| `-l` | `--letter` | Scale and tile the output to US Letter portrait pages (8.5"×11"). Default is natural size with no page constraints. |
+
+The Graphviz source file is saved as `<output>.<engine>` (e.g., `DeploymentMap.dot`).
+Rendered output is saved as `<output>.<format>` (e.g., `DeploymentMap.pdf`).
+
+### Graph Content
+
+| Switch | Long | Description |
+|--------|------|-------------|
+| `-g PROP` | `--group-property PROP` | BigFix computer property to group endpoints by (default: `Subnet Address`). Ignored with `--relaysonly` or `--detail`. |
+| `-m MAP` | `--map MAP` | Relay name mappings: `fromName:toName[,fromName:toName...]`. Useful when endpoints report to a relay by IP address rather than hostname. |
+| `-r` | `--relaysonly` | Render relay hierarchy only — no endpoints or groups |
+| `-d` | `--detail` | Create one node per endpoint instead of grouping (can produce very large graphs) |
+
+**Rendering modes (mutually exclusive in practice):**
+
+| Mode | Switches | Shows |
+|------|----------|-------|
+| Relays only | `--relaysonly` | Root server + relay nodes with endpoint counts |
+| Grouped (default) | *(neither)* | Root + relays + one group node per unique property value per relay |
+| Detail | `--detail` | Root + relays + one node per individual endpoint |
+
+## Examples
+
+```bash
+# Relay hierarchy only
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab --relaysonly -o RelayMap
+
+# Group by OS (default portrait size)
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab -g OS -o OSMap
+
+# Group by OS, scaled to US Letter pages for printing
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab -g OS --letter -o OSMap
+
+# Map an external IP to a known relay (DMZ/NAT scenario), multiple output formats
+python src/bf_deployment_map.py -b 10.1.1.1 -u IEMAdmin -k mylab \
+    -m 203.0.113.45:dmz-relay -f pdf,svg -o DeploymentMap
+
+# Use cached data, detail mode
+python src/bf_deployment_map.py -j data.json --detail -o DetailMap
+```
