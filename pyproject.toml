@@ -7,4 +7,5 @@ dependencies = [
     "besapi",
     "graphviz",
     "keyring>=25.5.0",
+    "keyrings.alt",
 ]
