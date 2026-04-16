@@ -392,7 +392,7 @@ def render_graph(relay, server_conf, args):
                     for ep in grp["comp_list"]:
                         dot.node(ep[1], color="blue", shape="component")
                         dot.edge(ep[1], relay_host, penwidth="1.5")
-            else:
+            elif relay_data["groups"]:
                 grp_node = f"grpnode_{relay_idx}"
                 group_lines = "\n".join(
                     f"{c} - {grp['count']}" for c, grp in relay_data["groups"].items()
