@@ -344,8 +344,11 @@ def render_graph(relay, server_conf, args):
         # Tighter node spacing to fit more nodes per page.
         # nodesep: min horizontal gap between nodes on the same rank (default 0.25)
         # ranksep: min vertical gap between ranks (default 0.5)
-        nodesep="0.15",
+        nodesep="0.2",
         ranksep="0.4",
+        # Extra clearance (in points) the edge router reserves around each node.
+        # Wider clearance = wider routing channels = parallel edges stay further apart.
+        sep="+6",
         # Merge parallel edges where possible to reduce clutter.
         concentrate="true",
         fontsize="11",
@@ -384,20 +387,24 @@ def render_graph(relay, server_conf, args):
             )
 
         if not args.relaysonly:
-            for grp_idx, (c, grp) in enumerate(relay_data["groups"].items()):
-                if args.detail:
+            if args.detail:
+                for c, grp in relay_data["groups"].items():
                     for ep in grp["comp_list"]:
                         dot.node(ep[1], color="blue", shape="component")
                         dot.edge(ep[1], relay_host, penwidth="1.5")
-                else:
-                    grp_node = f"grpnode_{relay_idx}_{grp_idx}"
-                    dot.node(
-                        grp_node,
-                        color="green",
-                        label=f"{args.group_property}: {c}\n{grp['count']} endpoints",
-                        shape="box",
-                    )
-                    dot.edge(grp_node, relay_host, penwidth="1.5")
+            else:
+                grp_node = f"grpnode_{relay_idx}"
+                group_lines = "\n".join(
+                    f"{c} - {grp['count']}" for c, grp in relay_data["groups"].items()
+                )
+                label = f"{args.group_property}\n\n{group_lines}"
+                dot.node(
+                    grp_node,
+                    color="green",
+                    label=label,
+                    shape="box",
+                )
+                dot.edge(grp_node, relay_host, penwidth="1.5")
 
     for fmt in args.format.split(","):
         dot.unflatten(stagger=3).render(
