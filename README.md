@@ -117,6 +117,11 @@ Rendered output is saved as `<output>.<format>` (e.g., `DeploymentMap.pdf`).
 | `-m MAP` | `--map MAP` | Relay name mappings: `fromName:toName[,fromName:toName...]`. Useful when endpoints report to a relay by IP address rather than hostname. |
 | `-r` | `--relaysonly` | Render relay hierarchy only — no endpoints or groups |
 | `-d` | `--detail` | Create one node per endpoint instead of grouping (can produce very large graphs) |
+| `-C` | `--case-sensitive` | Sort group property values case-sensitively. Default is case-insensitive. |
+
+Group property values in each relay's box are sorted automatically: IPv4 and IPv6 addresses sort
+by numeric value, purely numeric strings sort by integer value, and everything else sorts
+alphabetically (case-insensitive by default; use `-C` for case-sensitive ordering).
 
 **Rendering modes (mutually exclusive in practice):**
 

@@ -123,6 +123,12 @@ def build_arg_parser():
         "-E", "--encrypted-keyring", type=str, metavar="FILE",
         help="Use an encrypted keyring file at FILE instead of the system keyring.",
     )
+    parser.add_argument(
+        "-C", "--case-sensitive", action="store_true",
+        help="Sort group property values case-sensitively. By default sorting is "
+             "case-insensitive (uppercase and lowercase letters sort together). "
+             "Has no effect on IPv4/IPv6 or purely numeric values.",
+    )
     return parser
 
 
@@ -328,6 +334,19 @@ def load_relay_data(args, bf_pass):
     return relay, server_conf
 
 
+def smart_sort_key(s, case_sensitive=False):
+    try:
+        addr = ipaddress.ip_address(s)
+        return (0 if addr.version == 4 else 1, int(addr), "")
+    except ValueError:
+        pass
+    try:
+        return (2, int(s), "")
+    except ValueError:
+        pass
+    return (3, 0, s if case_sensitive else s.casefold())
+
+
 def render_graph(relay, server_conf, args):
     """Build and render the Graphviz diagram from the relay hierarchy."""
     dot = graphviz.Digraph(
@@ -388,14 +407,15 @@ def render_graph(relay, server_conf, args):
 
         if not args.relaysonly:
             if args.detail:
-                for c, grp in relay_data["groups"].items():
+                for c, grp in sorted(relay_data["groups"].items(), key=lambda item: smart_sort_key(item[0], args.case_sensitive)):
                     for ep in grp["comp_list"]:
                         dot.node(ep[1], color="blue", shape="component")
                         dot.edge(ep[1], relay_host, penwidth="1.5")
             elif relay_data["groups"]:
                 grp_node = f"grpnode_{relay_idx}"
                 group_lines = "\n".join(
-                    f"{c} - {grp['count']}" for c, grp in relay_data["groups"].items()
+                    f"{c} - {grp['count']}"
+                    for c, grp in sorted(relay_data["groups"].items(), key=lambda item: smart_sort_key(item[0], args.case_sensitive))
                 )
                 label = f"{args.group_property}\n\n{group_lines}"
                 dot.node(
